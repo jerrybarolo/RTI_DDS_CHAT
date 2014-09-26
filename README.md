@@ -11,7 +11,6 @@ To install RTI DDS into the local repository use the following steps
 
 Finally add the dependencies to your pom.xml:
 
-"
 <dependency>
     <groupId>com.rti</groupId>
     <artifactId>ndds</artifactId>
@@ -22,4 +21,4 @@ Finally add the dependencies to your pom.xml:
     <artifactId>nddsd</artifactId>
     <version>5.1.0</version>
 </dependency>
-"
+
