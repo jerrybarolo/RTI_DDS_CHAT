@@ -80,7 +80,7 @@ public class RtiChatPublisher {
 	{	
         try {
             RtiChat toWrite = new RtiChat();
-            toWrite.sender = "Mario Rossi";
+            toWrite.sender = "Jerrybarolo";
             toWrite.message = msg;
 
             _dataWriter.write(toWrite, InstanceHandle_t.HANDLE_NIL);

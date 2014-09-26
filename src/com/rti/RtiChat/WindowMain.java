@@ -23,6 +23,7 @@ import com.rti.dds.subscription.SampleInfo;
 import javax.swing.JComboBox;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JMenuItem;
 import javax.swing.event.MenuKeyListener;
@@ -165,6 +166,7 @@ public class WindowMain {
 	    frame.getContentPane().add(scroll);		
 	    
 	    textArea_storico = new JTextArea();
+	    textArea_storico.setEditable(false);
 	    scroll.setViewportView(textArea_storico);
 	    textArea_storico.setLineWrap(true);
 	    
@@ -180,6 +182,7 @@ public class WindowMain {
 		t.start();
 	    
 	    comboBox_contatti = new JComboBox<String>();
+	    comboBox_contatti.addItem("Jerrybarolo");
 	    comboBox_contatti.addActionListener(new ActionListener() {
 			
 			@Override
@@ -225,23 +228,31 @@ public class WindowMain {
 	    menuBar.add(mnNewMenu);
 	    
 	    JMenuItem mntmNewMenuItem = new JMenuItem("Aggiungi");
-	    mntmNewMenuItem.addMenuKeyListener(new MenuKeyListener() {
-	    	public void menuKeyPressed(MenuKeyEvent arg0) {
-	    	}
-	    	public void menuKeyReleased(MenuKeyEvent arg0) {
-	    	}
-	    	public void menuKeyTyped(MenuKeyEvent arg0) {
+	    mntmNewMenuItem.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent arg0) {
+	    		//Object[] possibilities = {"ham", "spam", "yam"};
+	    		String s = (String)JOptionPane.showInputDialog(
+	    		                    frame,
+	    		                    "Inserisci il contatto:\n",
+	    		                    "Customized Dialog",
+	    		                    JOptionPane.PLAIN_MESSAGE,
+	    		                    null,
+	    		                    null,
+	    		                    "nickname");
+
+	    		//If a string was returned, say so.
+	    		if ((s != null) && (s.length() > 0)) {
+	    			comboBox_contatti.addItem(s);
+	    		    return;
+	    		}
 	    	}
 	    });
+
 	    mnNewMenu.add(mntmNewMenuItem);
 	    
 	    JMenuItem mntmElimina = new JMenuItem("Elimina");
-	    mntmElimina.addMenuKeyListener(new MenuKeyListener() {
-	    	public void menuKeyPressed(MenuKeyEvent e) {
-	    	}
-	    	public void menuKeyReleased(MenuKeyEvent e) {
-	    	}
-	    	public void menuKeyTyped(MenuKeyEvent e) {
+	    mntmElimina.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
 	    	}
 	    });
 	    mnNewMenu.add(mntmElimina);
