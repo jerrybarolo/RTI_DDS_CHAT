@@ -6,7 +6,9 @@ Chat Java Example using RTI DDS 5.1.0 (http://www.rti.com/downloads/rti-dds-file
 To install RTI DDS into the local repository use the following steps
 
 1) mvn install:install-file -Dfile=nddsjava.jar -DgroupId=com.rti -DartifactId=ndds -Dpackaging=jar -Dversion=5.1.0
+
 2) mvn install:install-file -Dfile=nddsjavad.jar -DgroupId=com.rti -DartifactId=nddsd -Dpackaging=jar -Dversion=5.1.0
+
 
 Finally add the dependencies to your pom.xml:
 
