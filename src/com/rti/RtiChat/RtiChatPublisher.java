@@ -6,18 +6,21 @@ import java.io.InputStreamReader;
 
 import com.rti.dds.domain.DomainParticipant;
 import com.rti.dds.domain.DomainParticipantFactory;
+import com.rti.dds.infrastructure.DurabilityQosPolicyKind;
+import com.rti.dds.infrastructure.HistoryQosPolicyKind;
 import com.rti.dds.infrastructure.InstanceHandle_t;
 import com.rti.dds.infrastructure.RETCODE_ERROR;
+import com.rti.dds.infrastructure.ReliabilityQosPolicyKind;
 import com.rti.dds.infrastructure.StatusKind;
+import com.rti.dds.publication.DataWriterQos;
 import com.rti.dds.publication.Publisher;
 import com.rti.dds.topic.Topic;
+import com.rti.dds.topic.TopicQos;
 
 public class RtiChatPublisher {
 	
 	private DomainParticipant _participant;
 	private RtiChatDataWriter _dataWriter;
-
-	//public static void main(String[] args) {
 		
 	public RtiChatPublisher(){
 		// Create the DDS Domain participant on domain ID 0
@@ -33,12 +36,19 @@ public class RtiChatPublisher {
         
         RtiChatTypeSupport.register_type(_participant, 
 				RtiChatTypeSupport.get_type_name());
+        
+        TopicQos topic_qos = new TopicQos();
+		topic_qos = DomainParticipant.TOPIC_QOS_DEFAULT;
+        
+		topic_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
+		topic_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
+		topic_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
 
         // Create the topic "RtiChat_Topic" for the String type
         Topic topic = _participant.create_topic(
                 "RtiChat_Topic", 
                 RtiChatTypeSupport.get_type_name(), 
-                DomainParticipant.TOPIC_QOS_DEFAULT, 
+                topic_qos, 
                 null, // listener
                 StatusKind.STATUS_MASK_NONE);
         if (topic == null) {
@@ -46,11 +56,18 @@ public class RtiChatPublisher {
             return;
         }
         
+        DataWriterQos datawriter_qos = new DataWriterQos();
+        datawriter_qos = Publisher.DATAWRITER_QOS_DEFAULT;
+        
+        datawriter_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
+        datawriter_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
+        datawriter_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;     
+        
      // Create the data writer using the default publisher
         _dataWriter =
             (RtiChatDataWriter) _participant.create_datawriter(
                 topic, 
-                Publisher.DATAWRITER_QOS_DEFAULT,
+                datawriter_qos,
                 null, // listener
                 StatusKind.STATUS_MASK_NONE);
         if (_dataWriter == null) {
@@ -58,27 +75,15 @@ public class RtiChatPublisher {
             return;
         }
 	}
-        
-        //System.out.println("Ready to write data.");
-        //System.out.println("When the subscriber is ready, you can start writing.");
-        //System.out.print("Press CTRL+C to terminate or enter an empty line to do a clean shutdown.\n\n");
 
 	void sendMessage(String msg)
 	{	
-        //BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         try {
-            //while (true) {
-            //System.out.print("Please type a message> ");
-
             RtiChat toWrite = new RtiChat();
-            toWrite.sender = "Gerardo Fiorletta";
+            toWrite.sender = "Mario Rossi";
             toWrite.message = msg;
 
             _dataWriter.write(toWrite, InstanceHandle_t.HANDLE_NIL);
-            //}
-        //} catch (IOException e) {
-            // This exception can be thrown from the BufferedReader class
-          //  e.printStackTrace();
         } catch (RETCODE_ERROR e) {
             // This exception can be thrown from DDS write operation
             e.printStackTrace();
@@ -91,6 +96,4 @@ public class RtiChatPublisher {
         _participant.delete_contained_entities();
         DomainParticipantFactory.get_instance().delete_participant(_participant);
 	}
-	//}
-
 }

@@ -5,31 +5,54 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.JButton;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JTextArea;
 
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.subscription.SampleInfo;
+
 import javax.swing.JComboBox;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.SwingConstants;
+import javax.swing.JMenuItem;
+import javax.swing.event.MenuKeyListener;
+import javax.swing.event.MenuKeyEvent;
 
 public class WindowMain {
 
 	private JFrame frame;
 	private JTextArea textArea_storico;
 	private JTextArea textArea_message;
-	private JComboBox comboBox_contatti;
+	private JComboBox<String> comboBox_contatti;
 	private RtiChatPublisher _publisher;
 	private RtiChatSubscriber _subscriber;
 	private int _sampleCount = 0;
+	
+	private HashMap<String, ArrayList<String>> messageMap;
+
+	public Map<String, ArrayList<String>> getMessageMap() {
+		return messageMap;
+	}
+
+	public void putNewMessage(String sender, String message) {
+		ArrayList<String> arr = new ArrayList<String>();
+		if(this.messageMap.get(sender) != null)
+		{
+			arr = this.messageMap.get(sender);
+		}
+		arr.add(message);
+		this.messageMap.put(sender, arr);
+	}
 
 	/**
 	 * Launch the application.
@@ -56,9 +79,10 @@ public class WindowMain {
 	
 	public void newMessageArrived(RtiChat data)
 	{
+		putNewMessage(data.sender, data.message);
 		if(comboBox_contatti.getSelectedItem().equals(data.sender))
 		{
-			textArea_storico.append("\nNuovo Messaggio da " + data.sender + ": " + data.message + "\n");
+			textArea_storico.append(data.message + "\n");
 		}
 	}
 
@@ -66,6 +90,10 @@ public class WindowMain {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		
+		messageMap = new HashMap <String, ArrayList<String>>();
+		messageMap.clear();
+		
 		frame = new JFrame();
 		frame.setBounds(100, 100, 450, 300);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -117,20 +145,18 @@ public class WindowMain {
 		frame.getContentPane().setLayout(null);
 		
 		JLabel lblNewLabel = new JLabel("Storico Messaggi");
-		lblNewLabel.setBounds(262, 11, 89, 38);
+		lblNewLabel.setBounds(239, 11, 148, 38);
 		frame.getContentPane().add(lblNewLabel);
 		
 		JButton btnInvia = new JButton("Invia");
 		btnInvia.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				_publisher.sendMessage(textArea_message.getText());
+				textArea_message.setText("");
 			}
 		});
 		btnInvia.setBounds(176, 228, 89, 23);
 		frame.getContentPane().add(btnInvia);
-		//textArea_message.setSize(400,400); 
-		//textArea_message.setBounds(33, 48, 233, 115);
-		//frame.getContentPane().add(textArea_message);
 		
 		JScrollPane scroll = new JScrollPane ();
 	    scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -142,22 +168,44 @@ public class WindowMain {
 	    scroll.setViewportView(textArea_storico);
 	    textArea_storico.setLineWrap(true);
 	    
-	    comboBox_contatti = new JComboBox();
+	    _subscriber = new RtiChatSubscriber();
+		_publisher  = new RtiChatPublisher();
+		
+		Thread t = new Thread(new Runnable() {
+	         public void run()
+	         {
+	        	 setNotifyWhenDataAvailable();
+	         }
+		});		
+		t.start();
+	    
+	    comboBox_contatti = new JComboBox<String>();
 	    comboBox_contatti.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
+				System.out.println("JComboBox actionPerformed called");
 				
-			}
+				textArea_storico.setText("");
+				
+				String key = comboBox_contatti.getSelectedItem().toString();
+				ArrayList<String> arr = null;
+				if(messageMap.get(key) != null)
+				{
+					arr = messageMap.get(key);
+				
+					for(String c : arr)
+						textArea_storico.append(c + "\n");
+				}
+	        }
 		});
-	    comboBox_contatti.setBounds(38, 52, 129, 20);
-	    comboBox_contatti.addItem("Andrea Gerardi");
-	    comboBox_contatti.addItem("Gerardo Fiorletta");
+	    	    
+	    comboBox_contatti.setBounds(38, 76, 129, 20);
 	    frame.getContentPane().add(comboBox_contatti);
 	    
 	    JLabel lblContatti = new JLabel("Contatti");
-	    lblContatti.setBounds(49, 11, 72, 38);
+	    lblContatti.setBounds(38, 32, 72, 38);
 	    frame.getContentPane().add(lblContatti);
 	    
 	    JLabel lblMessaggio = new JLabel("Nuovo Messaggio");
@@ -168,17 +216,35 @@ public class WindowMain {
 	    textArea_message.setLineWrap(true);
 	    textArea_message.setBounds(176, 175, 234, 42);
 	    frame.getContentPane().add(textArea_message);
-		
-		_subscriber = new RtiChatSubscriber();
-		_publisher  = new RtiChatPublisher();
-		
-		Thread t = new Thread(new Runnable() {
-	         public void run()
-	         {
-	        	 setNotifyWhenDataAvailable();
-	         }
-		});		
-		t.start();
+	    
+	    JMenuBar menuBar = new JMenuBar();
+	    menuBar.setBounds(0, 0, 62, 21);
+	    frame.getContentPane().add(menuBar);
+	    
+	    JMenu mnNewMenu = new JMenu("Contatto");
+	    menuBar.add(mnNewMenu);
+	    
+	    JMenuItem mntmNewMenuItem = new JMenuItem("Aggiungi");
+	    mntmNewMenuItem.addMenuKeyListener(new MenuKeyListener() {
+	    	public void menuKeyPressed(MenuKeyEvent arg0) {
+	    	}
+	    	public void menuKeyReleased(MenuKeyEvent arg0) {
+	    	}
+	    	public void menuKeyTyped(MenuKeyEvent arg0) {
+	    	}
+	    });
+	    mnNewMenu.add(mntmNewMenuItem);
+	    
+	    JMenuItem mntmElimina = new JMenuItem("Elimina");
+	    mntmElimina.addMenuKeyListener(new MenuKeyListener() {
+	    	public void menuKeyPressed(MenuKeyEvent e) {
+	    	}
+	    	public void menuKeyReleased(MenuKeyEvent e) {
+	    	}
+	    	public void menuKeyTyped(MenuKeyEvent e) {
+	    	}
+	    });
+	    mnNewMenu.add(mntmElimina);
 	}
 
 	private void setNotifyWhenDataAvailable() {

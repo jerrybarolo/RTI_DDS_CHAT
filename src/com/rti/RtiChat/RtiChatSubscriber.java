@@ -6,17 +6,20 @@ import java.io.InputStreamReader;
 
 import com.rti.dds.domain.DomainParticipant;
 import com.rti.dds.domain.DomainParticipantFactory;
+import com.rti.dds.infrastructure.DurabilityQosPolicy;
+import com.rti.dds.infrastructure.DurabilityQosPolicyKind;
+import com.rti.dds.infrastructure.HistoryQosPolicyKind;
+import com.rti.dds.infrastructure.ReliabilityQosPolicyKind;
 import com.rti.dds.infrastructure.StatusKind;
+import com.rti.dds.subscription.DataReaderQos;
 import com.rti.dds.subscription.Subscriber;
 import com.rti.dds.topic.Topic;
+import com.rti.dds.topic.TopicQos;
 
 public class RtiChatSubscriber {
 	
 	private DomainParticipant _participant;
 	private RtiChatDataReader _dataReader;
-
-	//public static void main(String[] args) {
-		// TODO Auto-generated method stub
 	
 	public RtiChatDataReader getDataReader(){
 		return _dataReader;
@@ -39,10 +42,17 @@ public class RtiChatSubscriber {
 		RtiChatTypeSupport.register_type(_participant, 
 				RtiChatTypeSupport.get_type_name());
 		
+		TopicQos topic_qos = new TopicQos();
+		topic_qos = DomainParticipant.TOPIC_QOS_DEFAULT;
+        
+		topic_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
+		topic_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
+		topic_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
+		
 		Topic topic = _participant.create_topic(
                 "RtiChat_Topic",
                 RtiChatTypeSupport.get_type_name(), 
-                DomainParticipant.TOPIC_QOS_DEFAULT,
+                topic_qos,
                 null,   // listener
                 StatusKind.STATUS_MASK_NONE);
 		
@@ -62,8 +72,14 @@ public class RtiChatSubscriber {
 		}     
 
 		
-		//RtiChatListener listener = new RtiChatListener();
+		DataReaderQos datareader_qos = new DataReaderQos();
+		datareader_qos = Subscriber.DATAREADER_QOS_DEFAULT;
+        
+        datareader_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
+        datareader_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
+        datareader_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
 
+        
 		_dataReader = (RtiChatDataReader)
             subscriber.create_datareader(
             topic, 
@@ -74,28 +90,16 @@ public class RtiChatSubscriber {
 		if (_dataReader == null) {
 			System.err.println("! Unable to create DDS Data Reader");
 			throw new RuntimeException("HelloSubscriber creation failed");
-		}
-		
-		
-//		System.out.println("-- Press enter to exit");
-//		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//		try {
-//			br.readLine();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}			 
-	
-		
-		}
+		}				
+	}
         
-		public void close(){
-			/* Shutdown, when sampleCount is finite */
-	        if(_participant != null) {
-	        	_participant.delete_contained_entities();
-	
-	            DomainParticipantFactory.TheParticipantFactory.delete_participant(_participant);
-	            DomainParticipantFactory.finalize_instance();
-	        }	
-		}
+	public void close(){
+		/* Shutdown, when sampleCount is finite */
+        if(_participant != null) {
+        	_participant.delete_contained_entities();
+
+            DomainParticipantFactory.TheParticipantFactory.delete_participant(_participant);
+            DomainParticipantFactory.finalize_instance();
+        }	
+	}
 }
