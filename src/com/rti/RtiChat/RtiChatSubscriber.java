@@ -1,12 +1,7 @@
 package com.rti.RtiChat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import com.rti.dds.domain.DomainParticipant;
 import com.rti.dds.domain.DomainParticipantFactory;
-import com.rti.dds.infrastructure.DurabilityQosPolicy;
 import com.rti.dds.infrastructure.DurabilityQosPolicyKind;
 import com.rti.dds.infrastructure.HistoryQosPolicyKind;
 import com.rti.dds.infrastructure.ReliabilityQosPolicyKind;
@@ -43,8 +38,8 @@ public class RtiChatSubscriber {
 				RtiChatTypeSupport.get_type_name());
 		
 		TopicQos topic_qos = new TopicQos();
-		topic_qos = DomainParticipant.TOPIC_QOS_DEFAULT;
-        
+		_participant.get_default_topic_qos(topic_qos);
+		        
 		topic_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
 		topic_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
 		topic_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
@@ -54,13 +49,13 @@ public class RtiChatSubscriber {
                 RtiChatTypeSupport.get_type_name(), 
                 topic_qos,
                 null,   // listener
-                StatusKind.STATUS_MASK_NONE);
+                StatusKind.STATUS_MASK_NONE);		
 		
 		if (topic == null) {
 		    System.err.println("! Unable to create topic " + "RtiChat_Topic");
 		    return;
 		}
-		
+				
 		Subscriber subscriber = _participant.create_subscriber(
                 DomainParticipant.SUBSCRIBER_QOS_DEFAULT, 
                 null,           // listener
@@ -73,24 +68,23 @@ public class RtiChatSubscriber {
 
 		
 		DataReaderQos datareader_qos = new DataReaderQos();
-		datareader_qos = Subscriber.DATAREADER_QOS_DEFAULT;
-        
+		subscriber.get_default_datareader_qos(datareader_qos);
+		       
         datareader_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
         datareader_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
         datareader_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
 
-        
 		_dataReader = (RtiChatDataReader)
             subscriber.create_datareader(
             topic, 
-            Subscriber.DATAREADER_QOS_DEFAULT, 
+            datareader_qos, 
             null,
             StatusKind.STATUS_MASK_ALL);
 		
 		if (_dataReader == null) {
 			System.err.println("! Unable to create DDS Data Reader");
 			throw new RuntimeException("HelloSubscriber creation failed");
-		}				
+		}		
 	}
         
 	public void close(){

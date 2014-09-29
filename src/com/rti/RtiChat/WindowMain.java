@@ -24,10 +24,7 @@ import javax.swing.JComboBox;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
-import javax.swing.SwingConstants;
 import javax.swing.JMenuItem;
-import javax.swing.event.MenuKeyListener;
-import javax.swing.event.MenuKeyEvent;
 
 public class WindowMain {
 

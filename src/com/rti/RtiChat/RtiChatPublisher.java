@@ -1,9 +1,5 @@
 package com.rti.RtiChat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import com.rti.dds.domain.DomainParticipant;
 import com.rti.dds.domain.DomainParticipantFactory;
 import com.rti.dds.infrastructure.DurabilityQosPolicyKind;
@@ -13,7 +9,6 @@ import com.rti.dds.infrastructure.RETCODE_ERROR;
 import com.rti.dds.infrastructure.ReliabilityQosPolicyKind;
 import com.rti.dds.infrastructure.StatusKind;
 import com.rti.dds.publication.DataWriterQos;
-import com.rti.dds.publication.Publisher;
 import com.rti.dds.topic.Topic;
 import com.rti.dds.topic.TopicQos;
 
@@ -38,7 +33,7 @@ public class RtiChatPublisher {
 				RtiChatTypeSupport.get_type_name());
         
         TopicQos topic_qos = new TopicQos();
-		topic_qos = DomainParticipant.TOPIC_QOS_DEFAULT;
+		_participant.get_default_topic_qos(topic_qos);
         
 		topic_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
 		topic_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
@@ -57,11 +52,11 @@ public class RtiChatPublisher {
         }
         
         DataWriterQos datawriter_qos = new DataWriterQos();
-        datawriter_qos = Publisher.DATAWRITER_QOS_DEFAULT;
+        _participant.get_default_datawriter_qos(datawriter_qos);
         
         datawriter_qos.history.kind    = HistoryQosPolicyKind.KEEP_ALL_HISTORY_QOS;
         datawriter_qos.durability.kind = DurabilityQosPolicyKind.TRANSIENT_LOCAL_DURABILITY_QOS;
-        datawriter_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;     
+        datawriter_qos.reliability.kind = ReliabilityQosPolicyKind.RELIABLE_RELIABILITY_QOS;
         
      // Create the data writer using the default publisher
         _dataWriter =
